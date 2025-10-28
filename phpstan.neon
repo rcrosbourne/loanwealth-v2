@@ -13,6 +13,11 @@ parameters:
         - public
         - routes
 
+    excludePaths:
+        - database/migrations/2025_10_28_094307_create_activity_log_table.php
+        - database/migrations/2025_10_28_094308_add_event_column_to_activity_log_table.php
+        - database/migrations/2025_10_28_094309_add_batch_uuid_column_to_activity_log_table.php
+        - database/migrations/2025_10_28_094302_create_permission_tables.php
 
     level: max
 

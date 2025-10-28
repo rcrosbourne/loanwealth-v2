@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Enums\UserStatus;
+use App\Enums\UserType;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -24,6 +26,8 @@ it('may register a new user', function (): void {
             'email' => 'test@example.com',
             'password' => 'password1234',
             'password_confirmation' => 'password1234',
+            'type' => UserType::Borrower->value,
+            'status' => UserStatus::Active->value,
         ]);
 
     $response->assertRedirectToRoute('dashboard');

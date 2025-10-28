@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\UserStatus;
+use App\Enums\UserType;
 use App\Models\User;
 use App\Rules\ValidEmail;
 use Illuminate\Foundation\Http\FormRequest;
@@ -33,6 +35,8 @@ final class CreateUserRequest extends FormRequest
                 'confirmed',
                 Password::defaults(),
             ],
+            'type' => ['required', Rule::enum(UserType::class)],
+            'status' => ['required', Rule::enum(UserStatus::class)],
         ];
     }
 }
