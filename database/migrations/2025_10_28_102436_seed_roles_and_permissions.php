@@ -11,7 +11,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 return new class extends Migration
 {
-    private const GUARD_NAME = 'web';
+    private const string GUARD_NAME = 'web';
 
     public function up(): void
     {
