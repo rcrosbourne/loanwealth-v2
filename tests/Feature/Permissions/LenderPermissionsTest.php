@@ -24,7 +24,7 @@ it('lender cannot access borrower permissions', function (): void {
 });
 
 it('lender cannot access back office permissions', function (): void {
-    expect($this->lender->can(PermissionEnum::BackofficeUsersApprove->value))->toBeFalse();
+    expect($this->lender->can(PermissionEnum::BackOfficeUsersApprove->value))->toBeFalse();
 });
 
 it('lender cannot access admin permissions', function (): void {

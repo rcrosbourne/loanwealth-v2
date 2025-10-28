@@ -12,10 +12,10 @@ beforeEach(function (): void {
 });
 
 it('back office has correct permissions', function (): void {
-    expect($this->backOffice->can(PermissionEnum::BackofficeUsersApprove->value))->toBeTrue()
-        ->and($this->backOffice->can(PermissionEnum::BackofficeUsersBlock->value))->toBeTrue()
-        ->and($this->backOffice->can(PermissionEnum::BackofficeLoansReview->value))->toBeTrue()
-        ->and($this->backOffice->can(PermissionEnum::BackofficeReportsView->value))->toBeTrue();
+    expect($this->backOffice->can(PermissionEnum::BackOfficeUsersApprove->value))->toBeTrue()
+        ->and($this->backOffice->can(PermissionEnum::BackOfficeUsersBlock->value))->toBeTrue()
+        ->and($this->backOffice->can(PermissionEnum::BackOfficeLoansReview->value))->toBeTrue()
+        ->and($this->backOffice->can(PermissionEnum::BackOfficeReportsView->value))->toBeTrue();
 });
 
 it('back office cannot access borrower permissions', function (): void {

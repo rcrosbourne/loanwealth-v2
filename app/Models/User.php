@@ -10,6 +10,7 @@ use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -21,8 +22,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int $id
  * @property-read string $name
  * @property-read string $email
- * @property-read UserType $type
- * @property-read UserStatus $status
+ * @property UserType $type
+ * @property UserStatus $status
  * @property-read CarbonInterface|null $email_verified_at
  * @property-read string $password
  * @property-read string|null $remember_token
@@ -37,7 +38,7 @@ final class User extends Authenticatable implements MustVerifyEmail
     /**
      * @use HasFactory<UserFactory>
      */
-    use HasFactory, HasRoles, LogsActivity, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * @var list<string>
@@ -46,8 +47,6 @@ final class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'type',
-        'status',
     ];
 
     /**
@@ -59,6 +58,13 @@ final class User extends Authenticatable implements MustVerifyEmail
         'two_factor_secret',
         'two_factor_recovery_codes',
     ];
+
+    /**
+     * The guard name for Spatie Permission
+     *
+     * @phpstan-ignore property.onlyWritten
+     */
+    private string $guard_name = 'web';
 
     /**
      * @return array<string, string>

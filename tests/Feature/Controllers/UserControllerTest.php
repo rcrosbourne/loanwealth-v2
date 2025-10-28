@@ -145,7 +145,7 @@ it('may delete user account', function (): void {
 
     $response->assertRedirectToRoute('home');
 
-    expect($user->fresh())->toBeNull();
+    expect($user->fresh()->trashed())->toBeTrue();
 
     $this->assertGuest();
 });

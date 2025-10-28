@@ -28,8 +28,8 @@ it('super admin has lender permissions', function (): void {
 });
 
 it('super admin has back office permissions', function (): void {
-    expect($this->admin->can(PermissionEnum::BackofficeUsersApprove->value))->toBeTrue()
-        ->and($this->admin->can(PermissionEnum::BackofficeLoansReview->value))->toBeTrue();
+    expect($this->admin->can(PermissionEnum::BackOfficeUsersApprove->value))->toBeTrue()
+        ->and($this->admin->can(PermissionEnum::BackOfficeLoansReview->value))->toBeTrue();
 });
 
 it('super admin has admin-only permissions', function (): void {

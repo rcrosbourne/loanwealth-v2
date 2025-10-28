@@ -18,5 +18,6 @@ test('to array', function (): void {
             'updated_at',
             'type',
             'status',
+            'deleted_at',
         ]);
 });

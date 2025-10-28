@@ -19,10 +19,10 @@ enum Permission: string
     case LenderAutoinvestManage = 'lender.autoinvest.manage';
 
     // Back Office Permissions
-    case BackofficeUsersApprove = 'backoffice.users.approve';
-    case BackofficeUsersBlock = 'backoffice.users.block';
-    case BackofficeLoansReview = 'backoffice.loans.review';
-    case BackofficeReportsView = 'backoffice.reports.view';
+    case BackOfficeUsersApprove = 'backoffice.users.approve';
+    case BackOfficeUsersBlock = 'backoffice.users.block';
+    case BackOfficeLoansReview = 'backoffice.loans.review';
+    case BackOfficeReportsView = 'backoffice.reports.view';
 
     // Admin Permissions
     case AdminUsersDelete = 'admin.users.delete';
@@ -60,10 +60,10 @@ enum Permission: string
                 self::LenderAutoinvestManage->value,
             ],
             Role::BackOffice => [
-                self::BackofficeUsersApprove->value,
-                self::BackofficeUsersBlock->value,
-                self::BackofficeLoansReview->value,
-                self::BackofficeReportsView->value,
+                self::BackOfficeUsersApprove->value,
+                self::BackOfficeUsersBlock->value,
+                self::BackOfficeLoansReview->value,
+                self::BackOfficeReportsView->value,
             ],
             Role::SuperAdmin => self::values(), // Admin gets all permissions
         };
