@@ -218,6 +218,38 @@ Route::get('/users', function () {
 ### Models
 - Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 
+### Accessors & Mutators
+- Use the modern `Attribute` class format for accessors and mutators instead of the legacy `get*Attribute` and `set*Attribute` methods.
+- Always include proper return type hints with `Illuminate\Database\Eloquent\Casts\Attribute`.
+- Use arrow functions for simple transformations to keep code concise.
+
+<code-snippet name="Modern Accessor/Mutator Example" lang="php">
+use Illuminate\Database\Eloquent\Casts\Attribute;
+
+protected function firstName(): Attribute
+{
+    return Attribute::make(
+        get: fn (string $value) => ucfirst($value),
+        set: fn (string $value) => strtolower($value),
+    );
+}
+
+// For value objects or complex attributes
+protected function address(): Attribute
+{
+    return Attribute::make(
+        get: fn (mixed $value, array $attributes) => new Address(
+            $attributes['address_line_1'],
+            $attributes['address_line_2'],
+        ),
+        set: fn (Address $value) => [
+            'address_line_1' => $value->lineOne,
+            'address_line_2' => $value->lineTwo,
+        ],
+    );
+}
+</code-snippet>
+
 
 === pint/core rules ===
 
