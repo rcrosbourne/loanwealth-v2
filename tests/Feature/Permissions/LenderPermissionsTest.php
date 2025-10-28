@@ -8,25 +8,25 @@ use App\Models\User;
 
 beforeEach(function (): void {
     $this->lender = User::factory()->lender()->create();
-    $this->lender->assignRole(RoleEnum::LENDER->value);
+    $this->lender->assignRole(RoleEnum::Lender->value);
 });
 
 it('lender has correct permissions', function (): void {
-    expect($this->lender->can(PermissionEnum::LENDER_WALLET_MANAGE->value))->toBeTrue()
-        ->and($this->lender->can(PermissionEnum::LENDER_LOANS_BID->value))->toBeTrue()
-        ->and($this->lender->can(PermissionEnum::LENDER_PORTFOLIO_VIEW->value))->toBeTrue()
-        ->and($this->lender->can(PermissionEnum::LENDER_AUTOINVEST_MANAGE->value))->toBeTrue();
+    expect($this->lender->can(PermissionEnum::LenderWalletManage->value))->toBeTrue()
+        ->and($this->lender->can(PermissionEnum::LenderLoansBid->value))->toBeTrue()
+        ->and($this->lender->can(PermissionEnum::LenderPortfolioView->value))->toBeTrue()
+        ->and($this->lender->can(PermissionEnum::LenderAutoinvestManage->value))->toBeTrue();
 });
 
 it('lender cannot access borrower permissions', function (): void {
-    expect($this->lender->can(PermissionEnum::BORROWER_LOANS_REQUEST->value))->toBeFalse()
-        ->and($this->lender->can(PermissionEnum::BORROWER_DOCUMENTS_UPLOAD->value))->toBeFalse();
+    expect($this->lender->can(PermissionEnum::BorrowerLoansRequest->value))->toBeFalse()
+        ->and($this->lender->can(PermissionEnum::BorrowerDocumentsUpload->value))->toBeFalse();
 });
 
 it('lender cannot access back office permissions', function (): void {
-    expect($this->lender->can(PermissionEnum::BACKOFFICE_USERS_APPROVE->value))->toBeFalse();
+    expect($this->lender->can(PermissionEnum::BackofficeUsersApprove->value))->toBeFalse();
 });
 
 it('lender cannot access admin permissions', function (): void {
-    expect($this->lender->can(PermissionEnum::ADMIN_USERS_DELETE->value))->toBeFalse();
+    expect($this->lender->can(PermissionEnum::AdminUsersDelete->value))->toBeFalse();
 });

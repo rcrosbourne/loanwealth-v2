@@ -26,8 +26,8 @@ it('may register a new user', function (): void {
             'email' => 'test@example.com',
             'password' => 'password1234',
             'password_confirmation' => 'password1234',
-            'type' => UserType::BORROWER->value,
-            'status' => UserStatus::ACTIVE->value,
+            'type' => UserType::Borrower->value,
+            'status' => UserStatus::Active->value,
         ]);
 
     $response->assertRedirectToRoute('dashboard');

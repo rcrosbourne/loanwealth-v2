@@ -17,15 +17,15 @@ it('may create a user', function (): void {
     $user = $action->handle([
         'name' => 'Test User',
         'email' => 'example@email.com',
-        'type' => UserType::BORROWER,
-        'status' => UserStatus::ACTIVE,
+        'type' => UserType::Borrower,
+        'status' => UserStatus::Active,
     ], 'password');
 
     expect($user)->toBeInstanceOf(User::class)
         ->and($user->name)->toBe('Test User')
         ->and($user->email)->toBe('example@email.com')
-        ->and($user->type)->toBe(UserType::BORROWER)
-        ->and($user->status)->toBe(UserStatus::ACTIVE)
+        ->and($user->type)->toBe(UserType::Borrower)
+        ->and($user->status)->toBe(UserStatus::Active)
         ->and($user->password)->not->toBe('password');
 
     Event::assertDispatched(Registered::class);

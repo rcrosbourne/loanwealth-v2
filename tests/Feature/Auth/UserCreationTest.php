@@ -7,7 +7,7 @@ use App\Models\User;
 
 it('can create user with borrower type', function (): void {
     $user = User::factory()->create([
-        'type' => UserType::BORROWER,
+        'type' => UserType::Borrower,
     ]);
 
     expect($user->type)->toBeInstanceOf(UserType::class)
@@ -19,10 +19,10 @@ it('can create users for all types', function ($type): void {
 
     expect($user->type)->toBe($type);
 })->with([
-    UserType::BORROWER,
-    UserType::LENDER,
-    UserType::BACK_OFFICE,
-    UserType::SUPER_ADMIN,
+    UserType::Borrower,
+    UserType::Lender,
+    UserType::BackOffice,
+    UserType::SuperAdmin,
 ]);
 
 it('user has default active status', function (): void {

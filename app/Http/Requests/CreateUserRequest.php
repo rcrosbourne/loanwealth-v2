@@ -35,8 +35,8 @@ final class CreateUserRequest extends FormRequest
                 'confirmed',
                 Password::defaults(),
             ],
-            'type' => ['required', 'string', Rule::in(array_column(UserType::cases(), 'value'))],
-            'status' => ['required', 'string', Rule::in(array_column(UserStatus::cases(), 'value'))],
+            'type' => ['required', Rule::enum(UserType::class)],
+            'status' => ['required', Rule::enum(UserStatus::class)],
         ];
     }
 }

@@ -11,6 +11,8 @@ use Spatie\Permission\PermissionRegistrar;
 
 return new class extends Migration
 {
+    private const GUARD_NAME = 'web';
+
     public function up(): void
     {
         // Reset cached roles and permissions
@@ -18,12 +20,12 @@ return new class extends Migration
 
         // Create all permissions from enum
         foreach (PermissionEnum::cases() as $permissionEnum) {
-            Permission::findOrCreate($permissionEnum->value, 'web');
+            Permission::findOrCreate($permissionEnum->value, self::GUARD_NAME);
         }
 
         // Create roles and assign their permissions
         foreach (RoleEnum::cases() as $roleEnum) {
-            $role = Role::findOrCreate($roleEnum->value, 'web');
+            $role = Role::findOrCreate($roleEnum->value, self::GUARD_NAME);
 
             // Get permissions for this role
             $permissions = PermissionEnum::forRole($roleEnum);

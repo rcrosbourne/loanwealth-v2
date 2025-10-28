@@ -8,7 +8,7 @@ use App\Models\User;
 
 beforeEach(function (): void {
     $this->admin = User::factory()->superAdmin()->create();
-    $this->admin->assignRole(RoleEnum::SUPER_ADMIN->value);
+    $this->admin->assignRole(RoleEnum::SuperAdmin->value);
 });
 
 it('super admin has all permissions', function (): void {
@@ -18,22 +18,22 @@ it('super admin has all permissions', function (): void {
 });
 
 it('super admin has borrower permissions', function (): void {
-    expect($this->admin->can(PermissionEnum::BORROWER_LOANS_REQUEST->value))->toBeTrue()
-        ->and($this->admin->can(PermissionEnum::BORROWER_LOANS_VIEW->value))->toBeTrue();
+    expect($this->admin->can(PermissionEnum::BorrowerLoansRequest->value))->toBeTrue()
+        ->and($this->admin->can(PermissionEnum::BorrowerLoansView->value))->toBeTrue();
 });
 
 it('super admin has lender permissions', function (): void {
-    expect($this->admin->can(PermissionEnum::LENDER_WALLET_MANAGE->value))->toBeTrue()
-        ->and($this->admin->can(PermissionEnum::LENDER_LOANS_BID->value))->toBeTrue();
+    expect($this->admin->can(PermissionEnum::LenderWalletManage->value))->toBeTrue()
+        ->and($this->admin->can(PermissionEnum::LenderLoansBid->value))->toBeTrue();
 });
 
 it('super admin has back office permissions', function (): void {
-    expect($this->admin->can(PermissionEnum::BACKOFFICE_USERS_APPROVE->value))->toBeTrue()
-        ->and($this->admin->can(PermissionEnum::BACKOFFICE_LOANS_REVIEW->value))->toBeTrue();
+    expect($this->admin->can(PermissionEnum::BackofficeUsersApprove->value))->toBeTrue()
+        ->and($this->admin->can(PermissionEnum::BackofficeLoansReview->value))->toBeTrue();
 });
 
 it('super admin has admin-only permissions', function (): void {
-    expect($this->admin->can(PermissionEnum::ADMIN_USERS_DELETE->value))->toBeTrue()
-        ->and($this->admin->can(PermissionEnum::ADMIN_SYSTEM_CONFIGURE->value))->toBeTrue()
-        ->and($this->admin->can(PermissionEnum::ADMIN_REPORTS_FULL->value))->toBeTrue();
+    expect($this->admin->can(PermissionEnum::AdminUsersDelete->value))->toBeTrue()
+        ->and($this->admin->can(PermissionEnum::AdminSystemConfigure->value))->toBeTrue()
+        ->and($this->admin->can(PermissionEnum::AdminReportsFull->value))->toBeTrue();
 });

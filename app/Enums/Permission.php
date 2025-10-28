@@ -7,27 +7,27 @@ namespace App\Enums;
 enum Permission: string
 {
     // Borrower Permissions
-    case BORROWER_LOANS_REQUEST = 'borrower.loans.request';
-    case BORROWER_LOANS_VIEW = 'borrower.loans.view';
-    case BORROWER_PROFILE_MANAGE = 'borrower.profile.manage';
-    case BORROWER_DOCUMENTS_UPLOAD = 'borrower.documents.upload';
+    case BorrowerLoansRequest = 'borrower.loans.request';
+    case BorrowerLoansView = 'borrower.loans.view';
+    case BorrowerProfileManage = 'borrower.profile.manage';
+    case BorrowerDocumentsUpload = 'borrower.documents.upload';
 
     // Lender Permissions
-    case LENDER_WALLET_MANAGE = 'lender.wallet.manage';
-    case LENDER_LOANS_BID = 'lender.loans.bid';
-    case LENDER_PORTFOLIO_VIEW = 'lender.portfolio.view';
-    case LENDER_AUTOINVEST_MANAGE = 'lender.autoinvest.manage';
+    case LenderWalletManage = 'lender.wallet.manage';
+    case LenderLoansBid = 'lender.loans.bid';
+    case LenderPortfolioView = 'lender.portfolio.view';
+    case LenderAutoinvestManage = 'lender.autoinvest.manage';
 
     // Back Office Permissions
-    case BACKOFFICE_USERS_APPROVE = 'backoffice.users.approve';
-    case BACKOFFICE_USERS_BLOCK = 'backoffice.users.block';
-    case BACKOFFICE_LOANS_REVIEW = 'backoffice.loans.review';
-    case BACKOFFICE_REPORTS_VIEW = 'backoffice.reports.view';
+    case BackofficeUsersApprove = 'backoffice.users.approve';
+    case BackofficeUsersBlock = 'backoffice.users.block';
+    case BackofficeLoansReview = 'backoffice.loans.review';
+    case BackofficeReportsView = 'backoffice.reports.view';
 
     // Admin Permissions
-    case ADMIN_USERS_DELETE = 'admin.users.delete';
-    case ADMIN_SYSTEM_CONFIGURE = 'admin.system.configure';
-    case ADMIN_REPORTS_FULL = 'admin.reports.full';
+    case AdminUsersDelete = 'admin.users.delete';
+    case AdminSystemConfigure = 'admin.system.configure';
+    case AdminReportsFull = 'admin.reports.full';
 
     /**
      * Get all permission values as an array
@@ -47,25 +47,25 @@ enum Permission: string
     public static function forRole(Role $role): array
     {
         return match ($role) {
-            Role::BORROWER => [
-                self::BORROWER_LOANS_REQUEST->value,
-                self::BORROWER_LOANS_VIEW->value,
-                self::BORROWER_PROFILE_MANAGE->value,
-                self::BORROWER_DOCUMENTS_UPLOAD->value,
+            Role::Borrower => [
+                self::BorrowerLoansRequest->value,
+                self::BorrowerLoansView->value,
+                self::BorrowerProfileManage->value,
+                self::BorrowerDocumentsUpload->value,
             ],
-            Role::LENDER => [
-                self::LENDER_WALLET_MANAGE->value,
-                self::LENDER_LOANS_BID->value,
-                self::LENDER_PORTFOLIO_VIEW->value,
-                self::LENDER_AUTOINVEST_MANAGE->value,
+            Role::Lender => [
+                self::LenderWalletManage->value,
+                self::LenderLoansBid->value,
+                self::LenderPortfolioView->value,
+                self::LenderAutoinvestManage->value,
             ],
-            Role::BACK_OFFICE => [
-                self::BACKOFFICE_USERS_APPROVE->value,
-                self::BACKOFFICE_USERS_BLOCK->value,
-                self::BACKOFFICE_LOANS_REVIEW->value,
-                self::BACKOFFICE_REPORTS_VIEW->value,
+            Role::BackOffice => [
+                self::BackofficeUsersApprove->value,
+                self::BackofficeUsersBlock->value,
+                self::BackofficeLoansReview->value,
+                self::BackofficeReportsView->value,
             ],
-            Role::SUPER_ADMIN => self::values(), // Admin gets all permissions
+            Role::SuperAdmin => self::values(), // Admin gets all permissions
         };
     }
 

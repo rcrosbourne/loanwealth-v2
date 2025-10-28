@@ -6,22 +6,22 @@ use App\Enums\UserStatus;
 
 it('has correct user status values', function (): void {
     expect(UserStatus::cases())->toHaveCount(4)
-        ->and(UserStatus::ACTIVE->value)->toBe('active')
-        ->and(UserStatus::INACTIVE->value)->toBe('inactive')
-        ->and(UserStatus::SUSPENDED->value)->toBe('suspended')
-        ->and(UserStatus::BLOCKED->value)->toBe('blocked');
+        ->and(UserStatus::Active->value)->toBe('active')
+        ->and(UserStatus::Inactive->value)->toBe('inactive')
+        ->and(UserStatus::Suspended->value)->toBe('suspended')
+        ->and(UserStatus::Blocked->value)->toBe('blocked');
 });
 
 it('has correct status labels', function (): void {
-    expect(UserStatus::ACTIVE->label())->toBe('Active')
-        ->and(UserStatus::INACTIVE->label())->toBe('Inactive')
-        ->and(UserStatus::SUSPENDED->label())->toBe('Suspended')
-        ->and(UserStatus::BLOCKED->label())->toBe('Blocked');
+    expect(UserStatus::Active->label())->toBe('Active')
+        ->and(UserStatus::Inactive->label())->toBe('Inactive')
+        ->and(UserStatus::Suspended->label())->toBe('Suspended')
+        ->and(UserStatus::Blocked->label())->toBe('Blocked');
 });
 
 it('can check if status is active', function (): void {
-    expect(UserStatus::ACTIVE->isActive())->toBeTrue()
-        ->and(UserStatus::INACTIVE->isActive())->toBeFalse()
-        ->and(UserStatus::SUSPENDED->isActive())->toBeFalse()
-        ->and(UserStatus::BLOCKED->isActive())->toBeFalse();
+    expect(UserStatus::Active->isActive())->toBeTrue()
+        ->and(UserStatus::Inactive->isActive())->toBeFalse()
+        ->and(UserStatus::Suspended->isActive())->toBeFalse()
+        ->and(UserStatus::Blocked->isActive())->toBeFalse();
 });

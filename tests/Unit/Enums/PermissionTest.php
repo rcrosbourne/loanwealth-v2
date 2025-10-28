@@ -6,34 +6,34 @@ use App\Enums\Permission;
 use App\Enums\Role;
 
 it('has all borrower permissions', function (): void {
-    expect(Permission::BORROWER_LOANS_REQUEST->value)->toBe('borrower.loans.request')
-        ->and(Permission::BORROWER_LOANS_VIEW->value)->toBe('borrower.loans.view')
-        ->and(Permission::BORROWER_PROFILE_MANAGE->value)->toBe('borrower.profile.manage')
-        ->and(Permission::BORROWER_DOCUMENTS_UPLOAD->value)->toBe('borrower.documents.upload');
+    expect(Permission::BorrowerLoansRequest->value)->toBe('borrower.loans.request')
+        ->and(Permission::BorrowerLoansView->value)->toBe('borrower.loans.view')
+        ->and(Permission::BorrowerProfileManage->value)->toBe('borrower.profile.manage')
+        ->and(Permission::BorrowerDocumentsUpload->value)->toBe('borrower.documents.upload');
 });
 
 it('has all lender permissions', function (): void {
-    expect(Permission::LENDER_WALLET_MANAGE->value)->toBe('lender.wallet.manage')
-        ->and(Permission::LENDER_LOANS_BID->value)->toBe('lender.loans.bid')
-        ->and(Permission::LENDER_PORTFOLIO_VIEW->value)->toBe('lender.portfolio.view')
-        ->and(Permission::LENDER_AUTOINVEST_MANAGE->value)->toBe('lender.autoinvest.manage');
+    expect(Permission::LenderWalletManage->value)->toBe('lender.wallet.manage')
+        ->and(Permission::LenderLoansBid->value)->toBe('lender.loans.bid')
+        ->and(Permission::LenderPortfolioView->value)->toBe('lender.portfolio.view')
+        ->and(Permission::LenderAutoinvestManage->value)->toBe('lender.autoinvest.manage');
 });
 
 it('has all back office permissions', function (): void {
-    expect(Permission::BACKOFFICE_USERS_APPROVE->value)->toBe('backoffice.users.approve')
-        ->and(Permission::BACKOFFICE_USERS_BLOCK->value)->toBe('backoffice.users.block')
-        ->and(Permission::BACKOFFICE_LOANS_REVIEW->value)->toBe('backoffice.loans.review')
-        ->and(Permission::BACKOFFICE_REPORTS_VIEW->value)->toBe('backoffice.reports.view');
+    expect(Permission::BackofficeUsersApprove->value)->toBe('backoffice.users.approve')
+        ->and(Permission::BackofficeUsersBlock->value)->toBe('backoffice.users.block')
+        ->and(Permission::BackofficeLoansReview->value)->toBe('backoffice.loans.review')
+        ->and(Permission::BackofficeReportsView->value)->toBe('backoffice.reports.view');
 });
 
 it('has all admin permissions', function (): void {
-    expect(Permission::ADMIN_USERS_DELETE->value)->toBe('admin.users.delete')
-        ->and(Permission::ADMIN_SYSTEM_CONFIGURE->value)->toBe('admin.system.configure')
-        ->and(Permission::ADMIN_REPORTS_FULL->value)->toBe('admin.reports.full');
+    expect(Permission::AdminUsersDelete->value)->toBe('admin.users.delete')
+        ->and(Permission::AdminSystemConfigure->value)->toBe('admin.system.configure')
+        ->and(Permission::AdminReportsFull->value)->toBe('admin.reports.full');
 });
 
 it('can get permissions by role', function (): void {
-    $borrowerPerms = Permission::forRole(Role::BORROWER);
+    $borrowerPerms = Permission::forRole(Role::Borrower);
 
     expect($borrowerPerms)->toBeArray()
         ->toHaveCount(4)
@@ -44,19 +44,19 @@ it('can get all permission values', function (): void {
     $values = Permission::values();
 
     expect($values)->toBeArray()
-        ->toHaveCount(15);
+        ->toHaveCount(count(Permission::cases()));
 });
 
 it('can get permission group', function (): void {
-    expect(Permission::BORROWER_LOANS_REQUEST->group())->toBe('borrower')
-        ->and(Permission::LENDER_WALLET_MANAGE->group())->toBe('lender')
-        ->and(Permission::BACKOFFICE_USERS_APPROVE->group())->toBe('backoffice')
-        ->and(Permission::ADMIN_USERS_DELETE->group())->toBe('admin');
+    expect(Permission::BorrowerLoansRequest->group())->toBe('borrower')
+        ->and(Permission::LenderWalletManage->group())->toBe('lender')
+        ->and(Permission::BackofficeUsersApprove->group())->toBe('backoffice')
+        ->and(Permission::AdminUsersDelete->group())->toBe('admin');
 });
 
 it('can get permission action', function (): void {
-    expect(Permission::BORROWER_LOANS_REQUEST->action())->toBe('loans.request')
-        ->and(Permission::LENDER_WALLET_MANAGE->action())->toBe('wallet.manage')
-        ->and(Permission::BACKOFFICE_USERS_APPROVE->action())->toBe('users.approve')
-        ->and(Permission::ADMIN_USERS_DELETE->action())->toBe('users.delete');
+    expect(Permission::BorrowerLoansRequest->action())->toBe('loans.request')
+        ->and(Permission::LenderWalletManage->action())->toBe('wallet.manage')
+        ->and(Permission::BackofficeUsersApprove->action())->toBe('users.approve')
+        ->and(Permission::AdminUsersDelete->action())->toBe('users.delete');
 });

@@ -18,13 +18,13 @@ it('roles are seeded from migration', function (): void {
 });
 
 it('prevents duplicate role creation', function (): void {
-    expect(fn () => Role::create(['name' => RoleEnum::BORROWER->value]))
-        ->toThrow(Exception::class);
+    expect(fn () => Role::create(['name' => RoleEnum::Borrower->value]))
+        ->toThrow(Spatie\Permission\Exceptions\RoleAlreadyExists::class);
 });
 
 it('role names match enum values', function (): void {
-    $role = Role::findByName(RoleEnum::LENDER->value);
+    $role = Role::findByName(RoleEnum::Lender->value);
 
     expect($role->name)->toBe('lender')
-        ->and($role->name)->toBe(RoleEnum::LENDER->value);
+        ->and($role->name)->toBe(RoleEnum::Lender->value);
 });
