@@ -2,22 +2,289 @@
 
 ## Overview
 
-The Risk Scoring Engine is a critical component of the LoanWealth platform that evaluates borrower creditworthiness using multiple data points to generate a comprehensive risk profile. This guide provides detailed implementation specifications.
+The Risk Scoring Engine is a critical component of the LoanWealth platform that evaluates borrower creditworthiness using multiple data points to generate a comprehensive risk profile. The engine uses database-driven configuration for dynamic weight adjustment and scoring parameters, allowing real-time optimization without code deployments.
+
+---
+
+## Database Configuration Schema
+
+### Configuration Tables
+
+```sql
+-- Risk component weights configuration
+CREATE TABLE risk_component_configs (
+    id BIGSERIAL PRIMARY KEY,
+    component_key VARCHAR(50) UNIQUE NOT NULL,
+    component_name VARCHAR(100) NOT NULL,
+    weight DECIMAL(5,4) NOT NULL CHECK (weight >= 0 AND weight <= 1),
+    is_active BOOLEAN DEFAULT true,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT REFERENCES users(id)
+);
+
+-- Risk grade configurations
+CREATE TABLE risk_grade_configs (
+    id BIGSERIAL PRIMARY KEY,
+    grade VARCHAR(3) UNIQUE NOT NULL,
+    min_score DECIMAL(5,2) NOT NULL,
+    max_score DECIMAL(5,2) NOT NULL,
+    base_interest_rate DECIMAL(5,2) NOT NULL,
+    max_loan_amount_cents BIGINT NOT NULL,
+    risk_multiplier DECIMAL(4,2) DEFAULT 1.0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Fraud detection rules configuration
+CREATE TABLE fraud_rule_configs (
+    id BIGSERIAL PRIMARY KEY,
+    rule_key VARCHAR(50) UNIQUE NOT NULL,
+    rule_name VARCHAR(100) NOT NULL,
+    severity_score INTEGER NOT NULL CHECK (severity_score >= 0 AND severity_score <= 100),
+    is_active BOOLEAN DEFAULT true,
+    parameters JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Market adjustment configuration
+CREATE TABLE market_adjustment_configs (
+    id BIGSERIAL PRIMARY KEY,
+    adjustment_type VARCHAR(50) NOT NULL,
+    base_value DECIMAL(5,2),
+    multiplier DECIMAL(4,2) DEFAULT 1.0,
+    min_adjustment DECIMAL(5,2),
+    max_adjustment DECIMAL(5,2),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Configuration change audit log
+CREATE TABLE risk_config_audit_logs (
+    id BIGSERIAL PRIMARY KEY,
+    table_name VARCHAR(50) NOT NULL,
+    record_id BIGINT NOT NULL,
+    field_name VARCHAR(50),
+    old_value TEXT,
+    new_value TEXT,
+    changed_by BIGINT REFERENCES users(id),
+    change_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_risk_component_active ON risk_component_configs(is_active);
+CREATE INDEX idx_risk_grade_score ON risk_grade_configs(min_score, max_score);
+CREATE INDEX idx_fraud_rule_active ON fraud_rule_configs(is_active);
+CREATE INDEX idx_audit_log_table ON risk_config_audit_logs(table_name, created_at);
+```
+
+### Default Configuration Data
+
+```php
+// database/seeders/RiskScoringConfigSeeder.php
+
+use Illuminate\Database\Seeder;
+use App\Models\RiskComponentConfig;
+use App\Models\RiskGradeConfig;
+use App\Models\FraudRuleConfig;
+
+class RiskScoringConfigSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Seed component weights
+        $components = [
+            ['key' => 'credit_score', 'name' => 'Credit Score', 'weight' => 0.30],
+            ['key' => 'debt_to_income', 'name' => 'Debt-to-Income Ratio', 'weight' => 0.25],
+            ['key' => 'employment_stability', 'name' => 'Employment Stability', 'weight' => 0.15],
+            ['key' => 'payment_history', 'name' => 'Payment History', 'weight' => 0.15],
+            ['key' => 'household_factors', 'name' => 'Household Factors', 'weight' => 0.10],
+            ['key' => 'address_verification', 'name' => 'Address Verification', 'weight' => 0.05],
+        ];
+
+        foreach ($components as $component) {
+            RiskComponentConfig::updateOrCreate(
+                ['component_key' => $component['key']],
+                [
+                    'component_name' => $component['name'],
+                    'weight' => $component['weight'],
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        // Seed grade configurations
+        $grades = [
+            ['grade' => 'A+', 'min' => 85, 'max' => 100, 'rate' => 5.0, 'max_loan' => 5000000],
+            ['grade' => 'A', 'min' => 75, 'max' => 84.99, 'rate' => 7.0, 'max_loan' => 4000000],
+            ['grade' => 'B', 'min' => 65, 'max' => 74.99, 'rate' => 9.0, 'max_loan' => 3000000],
+            ['grade' => 'C', 'min' => 55, 'max' => 64.99, 'rate' => 12.0, 'max_loan' => 2000000],
+            ['grade' => 'D', 'min' => 45, 'max' => 54.99, 'rate' => 16.0, 'max_loan' => 1000000],
+            ['grade' => 'E', 'min' => 35, 'max' => 44.99, 'rate' => 20.0, 'max_loan' => 500000],
+            ['grade' => 'F', 'min' => 0, 'max' => 34.99, 'rate' => 25.0, 'max_loan' => 250000],
+        ];
+
+        foreach ($grades as $grade) {
+            RiskGradeConfig::updateOrCreate(
+                ['grade' => $grade['grade']],
+                [
+                    'min_score' => $grade['min'],
+                    'max_score' => $grade['max'],
+                    'base_interest_rate' => $grade['rate'],
+                    'max_loan_amount_cents' => $grade['max_loan'] * 100,
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        // Seed fraud rules
+        $fraudRules = [
+            [
+                'key' => 'velocity_check',
+                'name' => 'Application Velocity Check',
+                'severity' => 30,
+                'parameters' => [
+                    'max_applications' => 3,
+                    'time_window_days' => 30,
+                ]
+            ],
+            [
+                'key' => 'identity_mismatch',
+                'name' => 'Identity Data Mismatch',
+                'severity' => 50,
+                'parameters' => [
+                    'check_trn' => true,
+                    'check_address' => true,
+                ]
+            ],
+            [
+                'key' => 'suspicious_pattern',
+                'name' => 'Suspicious Behavior Pattern',
+                'severity' => 40,
+                'parameters' => [
+                    'min_completion_time' => 120, // seconds
+                    'max_completion_time' => 3600,
+                ]
+            ],
+        ];
+
+        foreach ($fraudRules as $rule) {
+            FraudRuleConfig::updateOrCreate(
+                ['rule_key' => $rule['key']],
+                [
+                    'rule_name' => $rule['name'],
+                    'severity_score' => $rule['severity'],
+                    'parameters' => $rule['parameters'],
+                    'is_active' => true,
+                ]
+            );
+        }
+    }
+}
+```
+
+---
+
+## Configuration Management Models
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class RiskComponentConfig extends Model
+{
+    protected $fillable = [
+        'component_key',
+        'component_name',
+        'weight',
+        'is_active',
+        'description',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'weight' => 'decimal:4',
+        'is_active' => 'boolean',
+    ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::updating(function ($model) {
+            // Validate weights sum to 1.0
+            $totalWeight = self::where('is_active', true)
+                ->where('id', '!=', $model->id)
+                ->sum('weight') + $model->weight;
+
+            if ($model->is_active && abs($totalWeight - 1.0) > 0.001) {
+                throw new \Exception('Active component weights must sum to 1.0');
+            }
+
+            // Log the change
+            RiskConfigAuditLog::create([
+                'table_name' => 'risk_component_configs',
+                'record_id' => $model->id,
+                'field_name' => 'weight',
+                'old_value' => $model->getOriginal('weight'),
+                'new_value' => $model->weight,
+                'changed_by' => auth()->id(),
+            ]);
+        });
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public static function getActiveWeights(): array
+    {
+        return cache()->remember('risk_component_weights', 3600, function () {
+            return self::where('is_active', true)
+                ->pluck('weight', 'component_key')
+                ->toArray();
+        });
+    }
+
+    public static function refreshCache(): void
+    {
+        cache()->forget('risk_component_weights');
+        self::getActiveWeights();
+    }
+}
+```
 
 ---
 
 ## Scoring Components
 
-### 1. Traditional Credit Score (Weight: 30%)
+### 1. Traditional Credit Score (Dynamic Weight)
 
 ```php
 namespace App\Services\RiskEngine\Components;
 
+use App\Models\RiskComponentConfig;
+
 class CreditScoreComponent implements RiskComponent
 {
-    private const WEIGHT = 0.30;
     private const MIN_SCORE = 300;
     private const MAX_SCORE = 850;
+    private const COMPONENT_KEY = 'credit_score';
+
+    private float $weight;
+
+    public function __construct()
+    {
+        $this->weight = $this->getConfiguredWeight();
+    }
 
     public function calculate(User $borrower): float
     {
@@ -34,7 +301,13 @@ class CreditScoreComponent implements RiskComponent
         $normalized = ($creditScore - self::MIN_SCORE) /
                      (self::MAX_SCORE - self::MIN_SCORE) * 100;
 
-        return $normalized * self::WEIGHT;
+        return $normalized * $this->weight;
+    }
+
+    private function getConfiguredWeight(): float
+    {
+        $weights = RiskComponentConfig::getActiveWeights();
+        return $weights[self::COMPONENT_KEY] ?? 0.30; // Default fallback
     }
 
     private function handleThinFile(User $borrower): float
@@ -50,30 +323,37 @@ class CreditScoreComponent implements RiskComponent
             $alternativeScore += 15;
         }
 
-        return $alternativeScore * self::WEIGHT;
+        return $alternativeScore * $this->weight;
     }
 }
 ```
 
-### 2. Debt-to-Income Ratio (Weight: 25%)
+### 2. Debt-to-Income Ratio (Dynamic Weight)
 
 ```php
 class DebtToIncomeComponent implements RiskComponent
 {
-    private const WEIGHT = 0.25;
     private const OPTIMAL_RATIO = 0.20; // 20% or less is optimal
     private const MAX_ACCEPTABLE = 0.50; // 50% is maximum
+    private const COMPONENT_KEY = 'debt_to_income';
+
+    private float $weight;
+
+    public function __construct()
+    {
+        $this->weight = $this->getConfiguredWeight();
+    }
 
     public function calculate(User $borrower): float
     {
-        $monthlyIncome = $borrower->profile->monthly_income;
-        $monthlyDebt = $this->calculateMonthlyDebt($borrower);
+        $monthlyIncomeCents = $borrower->profile->monthly_income_cents;
+        $monthlyDebtCents = $this->calculateMonthlyDebtCents($borrower);
 
-        if ($monthlyIncome <= 0) {
+        if ($monthlyIncomeCents <= 0) {
             return 0;
         }
 
-        $ratio = $monthlyDebt / $monthlyIncome;
+        $ratio = $monthlyDebtCents / $monthlyIncomeCents;
 
         // Inverse scoring - lower ratio is better
         if ($ratio <= self::OPTIMAL_RATIO) {
@@ -86,13 +366,19 @@ class DebtToIncomeComponent implements RiskComponent
                     (self::MAX_ACCEPTABLE - self::OPTIMAL_RATIO) * 100);
         }
 
-        return $score * self::WEIGHT;
+        return $score * $this->weight;
     }
 
-    private function calculateMonthlyDebt(User $borrower): float
+    private function getConfiguredWeight(): float
+    {
+        $weights = RiskComponentConfig::getActiveWeights();
+        return $weights[self::COMPONENT_KEY] ?? 0.25;
+    }
+
+    private function calculateMonthlyDebtCents(User $borrower): int
     {
         return $borrower->debts->sum(function ($debt) {
-            return $debt->monthly_payment;
+            return $debt->monthly_payment_cents;
         });
     }
 }
@@ -352,6 +638,9 @@ class AdvancedRiskScorer:
 namespace App\Services\RiskEngine;
 
 use App\Services\MachineLearning\PythonMLService;
+use App\Models\RiskComponentConfig;
+use App\Models\RiskGradeConfig;
+use App\Models\MarketAdjustmentConfig;
 
 class RiskScoringEngine
 {
@@ -361,14 +650,37 @@ class RiskScoringEngine
     public function __construct(PythonMLService $mlService)
     {
         $this->mlService = $mlService;
-        $this->components = [
-            new CreditScoreComponent(),
-            new DebtToIncomeComponent(),
-            new EmploymentStabilityComponent(),
-            new PaymentHistoryComponent(),
-            new HouseholdFactorsComponent(),
-            new AddressVerificationComponent(),
+        $this->initializeComponents();
+    }
+
+    private function initializeComponents(): void
+    {
+        // Only initialize active components from database
+        $activeComponents = RiskComponentConfig::where('is_active', true)
+            ->orderBy('weight', 'desc')
+            ->get();
+
+        $this->components = [];
+        foreach ($activeComponents as $config) {
+            $componentClass = $this->getComponentClass($config->component_key);
+            if (class_exists($componentClass)) {
+                $this->components[] = new $componentClass();
+            }
+        }
+    }
+
+    private function getComponentClass(string $key): string
+    {
+        $componentMap = [
+            'credit_score' => CreditScoreComponent::class,
+            'debt_to_income' => DebtToIncomeComponent::class,
+            'employment_stability' => EmploymentStabilityComponent::class,
+            'payment_history' => PaymentHistoryComponent::class,
+            'household_factors' => HouseholdFactorsComponent::class,
+            'address_verification' => AddressVerificationComponent::class,
         ];
+
+        return $componentMap[$key] ?? '';
     }
 
     public function calculateScore(User $borrower): RiskProfile
@@ -390,16 +702,18 @@ class RiskScoringEngine
             $baseScore = max(0, min(100, $baseScore + $mlAdjustment));
         }
 
-        // Determine risk grade
-        $grade = $this->calculateGrade($baseScore);
+        // Determine risk grade from database configuration
+        $gradeConfig = $this->getGradeConfig($baseScore);
+        $grade = $gradeConfig->grade;
 
-        // Calculate interest rate
-        $interestRate = $this->calculateInterestRate($grade, $baseScore);
+        // Calculate interest rate from database configuration
+        $interestRate = $this->calculateInterestRate($gradeConfig, $baseScore);
 
         return new RiskProfile([
             'score' => $baseScore,
             'grade' => $grade,
             'interest_rate' => $interestRate,
+            'max_loan_amount_cents' => $gradeConfig->max_loan_amount_cents,
             'component_scores' => $componentScores,
             'ml_adjustment' => $mlAdjustment,
             'factors' => $this->explainFactors($componentScores),
@@ -407,70 +721,68 @@ class RiskScoringEngine
         ]);
     }
 
-    private function calculateGrade(float $score): string
+    private function getGradeConfig(float $score): RiskGradeConfig
     {
-        return match(true) {
-            $score >= 85 => 'A+',
-            $score >= 75 => 'A',
-            $score >= 65 => 'B',
-            $score >= 55 => 'C',
-            $score >= 45 => 'D',
-            $score >= 35 => 'E',
-            default => 'F',
-        };
+        return RiskGradeConfig::where('is_active', true)
+            ->where('min_score', '<=', $score)
+            ->where('max_score', '>=', $score)
+            ->firstOrFail();
     }
 
-    private function calculateInterestRate(string $grade, float $score): float
+    private function calculateInterestRate(RiskGradeConfig $gradeConfig, float $score): float
     {
-        // Base rates by grade
-        $baseRates = [
-            'A+' => 5.0,
-            'A' => 7.0,
-            'B' => 9.0,
-            'C' => 12.0,
-            'D' => 16.0,
-            'E' => 20.0,
-            'F' => 25.0,
-        ];
+        $baseRate = $gradeConfig->base_interest_rate;
 
-        $baseRate = $baseRates[$grade];
-
-        // Market adjustment
+        // Market adjustment from database
         $marketAdjustment = $this->getMarketRateAdjustment();
 
-        // Fine-tune within grade
-        $gradeAdjustment = $this->calculateGradeAdjustment($grade, $score);
+        // Apply risk multiplier from grade config
+        $riskAdjustedRate = $baseRate * $gradeConfig->risk_multiplier;
 
-        return round($baseRate + $marketAdjustment + $gradeAdjustment, 2);
+        // Fine-tune within grade based on exact score
+        $gradeRange = $gradeConfig->max_score - $gradeConfig->min_score;
+        $scorePosition = ($score - $gradeConfig->min_score) / $gradeRange;
+        $gradeFinetuning = (1 - $scorePosition) * 0.5; // 0 to 0.5% adjustment
+
+        return round($riskAdjustedRate + $marketAdjustment + $gradeFinetuning, 2);
     }
 
     private function getMarketRateAdjustment(): float
     {
-        // Fetch current market conditions
-        $marketData = cache()->remember('market_rates', 3600, function() {
-            return [
+        // Fetch market adjustment configurations from database
+        $adjustments = MarketAdjustmentConfig::where('is_active', true)->get();
+        $totalAdjustment = 0;
+
+        foreach ($adjustments as $config) {
+            $value = $this->getMarketValue($config->adjustment_type);
+
+            // Apply configured multiplier and constraints
+            $adjustment = ($value - $config->base_value) * $config->multiplier;
+
+            // Apply min/max constraints
+            if ($config->min_adjustment !== null) {
+                $adjustment = max($adjustment, $config->min_adjustment);
+            }
+            if ($config->max_adjustment !== null) {
+                $adjustment = min($adjustment, $config->max_adjustment);
+            }
+
+            $totalAdjustment += $adjustment;
+        }
+
+        return $totalAdjustment;
+    }
+
+    private function getMarketValue(string $type): float
+    {
+        return cache()->remember("market_value_{$type}", 3600, function() use ($type) {
+            return match($type) {
                 'treasury_rate' => $this->fetchTreasuryRate(),
                 'platform_liquidity' => $this->calculatePlatformLiquidity(),
                 'default_rate_trend' => $this->getDefaultRateTrend(),
-            ];
+                default => 0,
+            };
         });
-
-        $adjustment = 0;
-
-        // Adjust based on treasury rate changes
-        $adjustment += ($marketData['treasury_rate'] - 3.0) * 0.5;
-
-        // Adjust based on platform liquidity
-        if ($marketData['platform_liquidity'] < 0.3) {
-            $adjustment += 1.0; // Increase rates when liquidity is low
-        }
-
-        // Adjust based on default trends
-        if ($marketData['default_rate_trend'] > 0) {
-            $adjustment += 0.5;
-        }
-
-        return $adjustment;
     }
 }
 ```
@@ -482,19 +794,43 @@ class RiskScoringEngine
 ```php
 namespace App\Services\RiskEngine\Fraud;
 
+use App\Models\FraudRuleConfig;
+
 class FraudDetectionService
 {
     private array $rules;
 
     public function __construct()
     {
-        $this->rules = [
-            new VelocityRule(),          // Multiple applications
-            new IdentityMismatchRule(),  // Inconsistent data
-            new SuspiciousPatternRule(), // Known fraud patterns
-            new DeviceFingerprintRule(), // Device tracking
-            new GeolocationRule(),       // Location anomalies
+        $this->initializeRules();
+    }
+
+    private function initializeRules(): void
+    {
+        $activeRules = FraudRuleConfig::where('is_active', true)
+            ->orderBy('severity_score', 'desc')
+            ->get();
+
+        $this->rules = [];
+        foreach ($activeRules as $config) {
+            $ruleClass = $this->getRuleClass($config->rule_key);
+            if (class_exists($ruleClass)) {
+                $this->rules[] = new $ruleClass($config);
+            }
+        }
+    }
+
+    private function getRuleClass(string $key): string
+    {
+        $ruleMap = [
+            'velocity_check' => VelocityRule::class,
+            'identity_mismatch' => IdentityMismatchRule::class,
+            'suspicious_pattern' => SuspiciousPatternRule::class,
+            'device_fingerprint' => DeviceFingerprintRule::class,
+            'geolocation' => GeolocationRule::class,
         ];
+
+        return $ruleMap[$key] ?? '';
     }
 
     public function evaluate(User $borrower, LoanRequest $request): FraudScore
@@ -511,35 +847,50 @@ class FraudDetectionService
             }
         }
 
+        // Get thresholds from database or use defaults
+        $manualReviewThreshold = config('fraud.manual_review_threshold', 50);
+        $blockThreshold = config('fraud.block_threshold', 80);
+
         return new FraudScore([
             'score' => $score,
             'flags' => $flags,
             'risk_level' => $this->calculateRiskLevel($score),
-            'requires_manual_review' => $score > 50,
-            'block_application' => $score > 80,
+            'requires_manual_review' => $score > $manualReviewThreshold,
+            'block_application' => $score > $blockThreshold,
         ]);
     }
 }
 
 class VelocityRule implements FraudRule
 {
+    private FraudRuleConfig $config;
+
+    public function __construct(FraudRuleConfig $config)
+    {
+        $this->config = $config;
+    }
+
     public function check(User $borrower, LoanRequest $request): RuleResult
     {
+        $params = $this->config->parameters;
+        $maxApplications = $params['max_applications'] ?? 3;
+        $timeWindowDays = $params['time_window_days'] ?? 30;
+
         $recentApplications = LoanRequest::where('borrower_id', $borrower->id)
-            ->where('created_at', '>', now()->subDays(30))
+            ->where('created_at', '>', now()->subDays($timeWindowDays))
             ->count();
 
-        if ($recentApplications > 3) {
+        if ($recentApplications > $maxApplications) {
             return RuleResult::triggered(
                 'Multiple loan applications detected',
-                severity: 30
+                severity: $this->config->severity_score
             );
         }
 
-        // Check for similar SSN/address combinations
+        // Check for similar TRN/address combinations (Caribbean adaptation)
         $similarProfiles = User::where('id', '!=', $borrower->id)
             ->where(function($query) use ($borrower) {
-                $query->where('ssn_hash', $borrower->ssn_hash)
+                $query->where('trn_hash', $borrower->trn_hash)
                     ->orWhere('address_hash', $borrower->address_hash);
             })
             ->count();
@@ -547,7 +898,7 @@ class VelocityRule implements FraudRule
         if ($similarProfiles > 0) {
             return RuleResult::triggered(
                 'Duplicate identity markers detected',
-                severity: 50
+                severity: $this->config->severity_score + 20
             );
         }
 
@@ -624,44 +975,351 @@ it('detects potential fraud patterns', function () {
 
 ---
 
-## Configuration Management
+## Admin Configuration Management
+
+### Admin UI Controllers
 
 ```php
-// config/risk-engine.php
-return [
-    'weights' => [
-        'credit_score' => env('RISK_WEIGHT_CREDIT', 0.30),
-        'debt_to_income' => env('RISK_WEIGHT_DTI', 0.25),
-        'employment' => env('RISK_WEIGHT_EMPLOYMENT', 0.15),
-        'payment_history' => env('RISK_WEIGHT_HISTORY', 0.15),
-        'household' => env('RISK_WEIGHT_HOUSEHOLD', 0.10),
-        'address' => env('RISK_WEIGHT_ADDRESS', 0.05),
-    ],
+namespace App\Http\Controllers\Admin;
 
-    'grades' => [
-        'A+' => ['min_score' => 85, 'base_rate' => 5.0, 'max_loan' => 50000],
-        'A'  => ['min_score' => 75, 'base_rate' => 7.0, 'max_loan' => 40000],
-        'B'  => ['min_score' => 65, 'base_rate' => 9.0, 'max_loan' => 30000],
-        'C'  => ['min_score' => 55, 'base_rate' => 12.0, 'max_loan' => 20000],
-        'D'  => ['min_score' => 45, 'base_rate' => 16.0, 'max_loan' => 10000],
-        'E'  => ['min_score' => 35, 'base_rate' => 20.0, 'max_loan' => 5000],
-    ],
+use App\Http\Controllers\Controller;
+use App\Models\RiskComponentConfig;
+use App\Models\RiskGradeConfig;
+use App\Models\FraudRuleConfig;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
-    'fraud_detection' => [
-        'enabled' => env('FRAUD_DETECTION_ENABLED', true),
-        'manual_review_threshold' => 50,
-        'auto_reject_threshold' => 80,
-        'velocity_check_days' => 30,
-        'max_applications_per_period' => 3,
-    ],
+class RiskConfigurationController extends Controller
+{
+    public function index()
+    {
+        return Inertia::render('Admin/RiskConfiguration/Index', [
+            'components' => RiskComponentConfig::with('updatedBy')->get(),
+            'grades' => RiskGradeConfig::where('is_active', true)
+                ->orderBy('min_score', 'desc')
+                ->get(),
+            'fraudRules' => FraudRuleConfig::where('is_active', true)->get(),
+            'totalWeight' => RiskComponentConfig::where('is_active', true)
+                ->sum('weight'),
+        ]);
+    }
 
-    'machine_learning' => [
-        'enabled' => env('ML_SCORING_ENABLED', false),
-        'service_url' => env('ML_SERVICE_URL'),
-        'timeout' => 5, // seconds
-        'cache_ttl' => 3600, // 1 hour
-    ],
-];
+    public function updateComponent(Request $request, RiskComponentConfig $component)
+    {
+        $validated = $request->validate([
+            'weight' => 'required|numeric|min:0|max:1',
+            'is_active' => 'required|boolean',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        // Validate total weights if activating or changing weight
+        if ($validated['is_active']) {
+            $otherWeights = RiskComponentConfig::where('is_active', true)
+                ->where('id', '!=', $component->id)
+                ->sum('weight');
+
+            if (abs(($otherWeights + $validated['weight']) - 1.0) > 0.001) {
+                return back()->withErrors([
+                    'weight' => 'Active component weights must sum to exactly 1.0'
+                ]);
+            }
+        }
+
+        $component->update($validated + ['updated_by' => auth()->id()]);
+        RiskComponentConfig::refreshCache();
+
+        return back()->with('success', 'Component weight updated successfully');
+    }
+
+    public function updateGrade(Request $request, RiskGradeConfig $grade)
+    {
+        $validated = $request->validate([
+            'base_interest_rate' => 'required|numeric|min:0|max:100',
+            'max_loan_amount_cents' => 'required|integer|min:0',
+            'risk_multiplier' => 'required|numeric|min:0.1|max:2',
+        ]);
+
+        $grade->update($validated);
+
+        return back()->with('success', 'Grade configuration updated successfully');
+    }
+
+    public function updateFraudRule(Request $request, FraudRuleConfig $rule)
+    {
+        $validated = $request->validate([
+            'severity_score' => 'required|integer|min:0|max:100',
+            'is_active' => 'required|boolean',
+            'parameters' => 'nullable|array',
+        ]);
+
+        $rule->update($validated);
+
+        return back()->with('success', 'Fraud rule updated successfully');
+    }
+
+    public function simulateScore(Request $request)
+    {
+        $validated = $request->validate([
+            'borrower_id' => 'required|exists:users,id',
+        ]);
+
+        $borrower = User::findOrFail($validated['borrower_id']);
+        $engine = app(RiskScoringEngine::class);
+        $profile = $engine->calculateScore($borrower);
+
+        return response()->json([
+            'profile' => $profile,
+            'components' => $profile->component_scores,
+            'recommendation' => $this->getRecommendation($profile),
+        ]);
+    }
+}
+```
+
+### Admin Dashboard View
+
+```jsx
+// resources/js/Pages/Admin/RiskConfiguration/Index.jsx
+import { useState } from 'react';
+import { useForm } from '@inertiajs/react';
+import AdminLayout from '@/Layouts/AdminLayout';
+
+export default function RiskConfiguration({ components, grades, fraudRules, totalWeight }) {
+    const [activeTab, setActiveTab] = useState('components');
+
+    return (
+        <AdminLayout title="Risk Scoring Configuration">
+            <div className="bg-white shadow rounded-lg">
+                <div className="border-b border-gray-200">
+                    <nav className="flex -mb-px">
+                        <button
+                            onClick={() => setActiveTab('components')}
+                            className={`px-6 py-3 ${activeTab === 'components' ? 'border-b-2 border-indigo-500' : ''}`}
+                        >
+                            Component Weights
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('grades')}
+                            className={`px-6 py-3 ${activeTab === 'grades' ? 'border-b-2 border-indigo-500' : ''}`}
+                        >
+                            Grade Configuration
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('fraud')}
+                            className={`px-6 py-3 ${activeTab === 'fraud' ? 'border-b-2 border-indigo-500' : ''}`}
+                        >
+                            Fraud Rules
+                        </button>
+                    </nav>
+                </div>
+
+                <div className="p-6">
+                    {activeTab === 'components' && (
+                        <ComponentWeights
+                            components={components}
+                            totalWeight={totalWeight}
+                        />
+                    )}
+                    {activeTab === 'grades' && (
+                        <GradeConfiguration grades={grades} />
+                    )}
+                    {activeTab === 'fraud' && (
+                        <FraudRules rules={fraudRules} />
+                    )}
+                </div>
+            </div>
+        </AdminLayout>
+    );
+}
+
+function ComponentWeights({ components, totalWeight }) {
+    const weightSum = Math.abs(totalWeight - 1.0) < 0.001;
+
+    return (
+        <div>
+            {!weightSum && (
+                <div className="bg-red-50 p-4 rounded mb-4">
+                    <p className="text-red-800">
+                        Warning: Active weights sum to {(totalWeight * 100).toFixed(1)}%.
+                        They must sum to exactly 100%.
+                    </p>
+                </div>
+            )}
+
+            <div className="space-y-4">
+                {components.map(component => (
+                    <ComponentWeightForm key={component.id} component={component} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function ComponentWeightForm({ component }) {
+    const { data, setData, put, processing, errors } = useForm({
+        weight: component.weight,
+        is_active: component.is_active,
+        description: component.description || '',
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        put(`/admin/risk-config/components/${component.id}`);
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="border rounded p-4">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium">{component.component_name}</h3>
+                <label className="flex items-center">
+                    <input
+                        type="checkbox"
+                        checked={data.is_active}
+                        onChange={e => setData('is_active', e.target.checked)}
+                        className="mr-2"
+                    />
+                    Active
+                </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium mb-1">
+                        Weight (Current: {(component.weight * 100).toFixed(1)}%)
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="1"
+                        value={data.weight}
+                        onChange={e => setData('weight', parseFloat(e.target.value))}
+                        disabled={!data.is_active}
+                        className="w-full border rounded px-3 py-2"
+                    />
+                    {errors.weight && (
+                        <p className="text-red-600 text-sm mt-1">{errors.weight}</p>
+                    )}
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1">Description</label>
+                    <input
+                        type="text"
+                        value={data.description}
+                        onChange={e => setData('description', e.target.value)}
+                        className="w-full border rounded px-3 py-2"
+                    />
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={processing}
+                className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+                Update Configuration
+            </button>
+        </form>
+    );
+}
+```
+
+### Configuration API Routes
+
+```php
+// routes/web.php (Admin routes)
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/risk-config', [RiskConfigurationController::class, 'index'])
+        ->name('admin.risk-config.index');
+
+    Route::put('/risk-config/components/{component}', [RiskConfigurationController::class, 'updateComponent'])
+        ->name('admin.risk-config.components.update');
+
+    Route::put('/risk-config/grades/{grade}', [RiskConfigurationController::class, 'updateGrade'])
+        ->name('admin.risk-config.grades.update');
+
+    Route::put('/risk-config/fraud-rules/{rule}', [RiskConfigurationController::class, 'updateFraudRule'])
+        ->name('admin.risk-config.fraud-rules.update');
+
+    Route::post('/risk-config/simulate', [RiskConfigurationController::class, 'simulateScore'])
+        ->name('admin.risk-config.simulate');
+});
+
+// routes/api.php (API endpoints for external access)
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('v1/admin')->group(function () {
+    Route::get('/risk-config/export', [RiskConfigApiController::class, 'export']);
+    Route::post('/risk-config/import', [RiskConfigApiController::class, 'import']);
+    Route::post('/risk-config/validate', [RiskConfigApiController::class, 'validate']);
+    Route::post('/risk-config/rollback/{version}', [RiskConfigApiController::class, 'rollback']);
+});
+```
+
+### Configuration Validation Service
+
+```php
+namespace App\Services\RiskEngine;
+
+use App\Models\RiskComponentConfig;
+use App\Models\RiskGradeConfig;
+
+class ConfigurationValidator
+{
+    public function validateWeights(): array
+    {
+        $errors = [];
+
+        $totalWeight = RiskComponentConfig::where('is_active', true)->sum('weight');
+
+        if (abs($totalWeight - 1.0) > 0.001) {
+            $errors[] = "Active component weights sum to {$totalWeight}, must equal 1.0";
+        }
+
+        return $errors;
+    }
+
+    public function validateGrades(): array
+    {
+        $errors = [];
+
+        $grades = RiskGradeConfig::where('is_active', true)
+            ->orderBy('min_score')
+            ->get();
+
+        $lastMax = -1;
+        foreach ($grades as $grade) {
+            if ($grade->min_score <= $lastMax) {
+                $errors[] = "Grade {$grade->grade} overlaps with previous grade";
+            }
+
+            if ($grade->min_score >= $grade->max_score) {
+                $errors[] = "Grade {$grade->grade} has invalid score range";
+            }
+
+            $lastMax = $grade->max_score;
+        }
+
+        // Check for complete coverage 0-100
+        if ($grades->first()->min_score > 0) {
+            $errors[] = "No grade covers scores below {$grades->first()->min_score}";
+        }
+
+        if ($grades->last()->max_score < 100) {
+            $errors[] = "No grade covers scores above {$grades->last()->max_score}";
+        }
+
+        return $errors;
+    }
+
+    public function validateAll(): array
+    {
+        return [
+            'weights' => $this->validateWeights(),
+            'grades' => $this->validateGrades(),
+            'valid' => empty($this->validateWeights()) && empty($this->validateGrades()),
+        ];
+    }
+}
 ```
 
 ---
