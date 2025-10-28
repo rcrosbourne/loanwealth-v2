@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\UserStatus;
+use App\Enums\UserType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -23,6 +25,8 @@ final class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'type' => UserType::BORROWER,
+            'status' => UserStatus::ACTIVE,
             'email_verified_at' => now(),
             'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -45,6 +49,55 @@ final class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+        ]);
+    }
+
+    public function borrower(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => UserType::BORROWER,
+        ]);
+    }
+
+    public function lender(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => UserType::LENDER,
+        ]);
+    }
+
+    public function backOffice(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => UserType::BACK_OFFICE,
+        ]);
+    }
+
+    public function superAdmin(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'type' => UserType::SUPER_ADMIN,
+        ]);
+    }
+
+    public function suspended(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => UserStatus::SUSPENDED,
+        ]);
+    }
+
+    public function blocked(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => UserStatus::BLOCKED,
+        ]);
+    }
+
+    public function inactive(): self
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => UserStatus::INACTIVE,
         ]);
     }
 }
