@@ -62,9 +62,11 @@ final class User extends Authenticatable implements MustVerifyEmail
     /**
      * The guard name for Spatie Permission
      *
+     * Must be protected (not private) for Spatie Permission package compatibility
+     *
      * @phpstan-ignore property.onlyWritten
      */
-    private string $guard_name = 'web';
+    protected string $guard_name = 'web';
 
     /**
      * @return array<string, string>

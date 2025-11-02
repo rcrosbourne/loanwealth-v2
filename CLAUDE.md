@@ -111,6 +111,11 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ## Enums
 - Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
+- Enum value conventions:
+  - **Permission enums**: Use dot notation for hierarchical namespacing (`resource.action`). Example: `borrower.loans.request`, `lender.investments.view`
+  - **Role enums**: Use hyphens for compound words. Example: `back-office`, `super-admin`
+  - **Simple enums**: Use lowercase for single-word values. Example: `active`, `inactive`, `borrower`, `lender`
+  - This convention provides clear separation between hierarchical permissions and role identifiers
 
 
 === inertia-laravel/core rules ===

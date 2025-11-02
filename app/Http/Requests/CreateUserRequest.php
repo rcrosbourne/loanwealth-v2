@@ -35,8 +35,10 @@ final class CreateUserRequest extends FormRequest
                 'confirmed',
                 Password::defaults(),
             ],
-            'type' => ['required', Rule::enum(UserType::class)],
-            'status' => ['required', Rule::enum(UserStatus::class)],
+            // Optional: Defaults to Borrower and Active in CreateUser action
+            // Back-office users can specify these values explicitly
+            'type' => ['sometimes', 'nullable', Rule::enum(UserType::class)],
+            'status' => ['sometimes', 'nullable', Rule::enum(UserStatus::class)],
         ];
     }
 }
