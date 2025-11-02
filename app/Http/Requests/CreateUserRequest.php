@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\UserStatus;
+use App\Enums\UserType;
 use App\Models\User;
 use App\Rules\ValidEmail;
 use Illuminate\Foundation\Http\FormRequest;
@@ -33,6 +35,10 @@ final class CreateUserRequest extends FormRequest
                 'confirmed',
                 Password::defaults(),
             ],
+            // Optional: Defaults to Borrower and Active in CreateUser action
+            // Back-office users can specify these values explicitly
+            'type' => ['sometimes', 'nullable', Rule::enum(UserType::class)],
+            'status' => ['sometimes', 'nullable', Rule::enum(UserStatus::class)],
         ];
     }
 }

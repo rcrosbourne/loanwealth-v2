@@ -13,11 +13,16 @@
         "inertiajs/inertia-laravel": "^2.0.10",
         "laravel/fortify": "^1.31.2",
         "laravel/framework": "^12.35.1",
+        "laravel/pennant": "^1.18",
         "laravel/reverb": "^1.6",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.12",
+        "moneyphp/money": "^4.8",
         "nunomaduro/essentials": "^1.0.1",
-        "resend/resend-laravel": "^0.23.0"
+        "resend/resend-laravel": "^0.23.0",
+        "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-data": "^4.18",
+        "spatie/laravel-permission": "^6.22"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.1.1",
