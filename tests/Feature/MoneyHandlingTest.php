@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\SupportedCurrency;
 use App\Support\Funds;
+use Money\Currency;
 use Money\Money;
 
 it('can create Money objects using Funds::of with default JMD currency', function (): void {
@@ -181,8 +182,8 @@ it('allocation by percentage validates total is 100', function (): void {
     $amount = Funds::of(10000);
     $invalidPercentages = [40, 40, 30];
 
-    expect(fn () => Funds::allocateByPercentage($amount, $invalidPercentages))
-        ->toThrow(\InvalidArgumentException::class, 'Percentages must total 100');
+    expect(fn (): array => Funds::allocateByPercentage($amount, $invalidPercentages))
+        ->toThrow(InvalidArgumentException::class, 'Percentages must total 100');
 });
 
 it('can allocate with many participants for diverse loan portfolios', function (): void {
@@ -226,4 +227,12 @@ it('can work with USD allocations for international loans', function (): void {
         ->and($allocations[1]->getCurrency()->getCode())->toBe('USD')
         ->and($allocations[0]->getAmount())->toBe('60000')
         ->and($allocations[1]->getAmount())->toBe('40000');
+});
+
+it('can format Money with unsupported currency using default locale', function (): void {
+    $money = new Money('50000', new Currency('EUR'));
+
+    $formatted = Funds::format($money);
+
+    expect($formatted)->toContain('500.00');
 });

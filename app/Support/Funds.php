@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Enums\SupportedCurrency;
-use Money\Currency;
+use InvalidArgumentException;
 use Money\Currencies\ISOCurrencies;
+use Money\Currency;
 use Money\Formatter\IntlMoneyFormatter;
 use Money\Money;
 use NumberFormatter;
@@ -18,7 +19,8 @@ final class Funds
      */
     public static function of(int|string $amount): Money
     {
-        return new Money((string) $amount, new Currency('JMD'));
+        /** @var int|numeric-string $amount */
+        return new Money($amount, new Currency('JMD'));
     }
 
     /**
@@ -50,28 +52,28 @@ final class Funds
     /**
      * Allocate money by ratios (for loan distributions)
      *
-     * @param  array<int|string>  $ratios
+     * @param  non-empty-array<int|string>  $ratios
      * @return array<Money>
      */
     public static function allocateByRatio(Money $amount, array $ratios): array
     {
+        /** @var non-empty-array<float|int> $ratios */
         return $amount->allocate($ratios);
     }
 
     /**
      * Allocate money by percentages (must total 100)
      *
-     * @param  array<int>  $percentages
+     * @param  non-empty-array<int>  $percentages
      * @return array<Money>
      */
     public static function allocateByPercentage(Money $amount, array $percentages): array
     {
         $total = array_sum($percentages);
 
-        if ($total !== 100) {
-            throw new \InvalidArgumentException('Percentages must total 100');
-        }
+        throw_if($total !== 100, InvalidArgumentException::class, 'Percentages must total 100');
 
+        /** @var non-empty-array<float|int> $percentages */
         return $amount->allocate($percentages);
     }
 
@@ -84,7 +86,7 @@ final class Funds
     public static function calculateRatios(array $investments): array
     {
         return array_map(
-            fn (Money $money) => (int) $money->getAmount(),
+            fn (Money $money): int => (int) $money->getAmount(),
             $investments
         );
     }
@@ -93,10 +95,10 @@ final class Funds
 /**
  * Builder for creating Money in specific currencies
  */
-final class FundsBuilder
+final readonly class FundsBuilder
 {
     public function __construct(
-        private readonly SupportedCurrency $currency
+        private SupportedCurrency $currency
     ) {}
 
     /**
@@ -104,6 +106,7 @@ final class FundsBuilder
      */
     public function of(int|string $amount): Money
     {
-        return new Money((string) $amount, new Currency($this->currency->value));
+        /** @var int|numeric-string $amount */
+        return new Money($amount, new Currency($this->currency->value));
     }
 }

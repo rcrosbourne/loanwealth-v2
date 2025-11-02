@@ -9,7 +9,10 @@ use Money\Money;
 
 it('casts database value to Money object', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
 
     $money = $cast->get($model, 'amount', '10000', []);
 
@@ -20,7 +23,10 @@ it('casts database value to Money object', function (): void {
 
 it('casts Money object to database value', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
     $money = new Money('10000', new Currency('JMD'));
 
     $value = $cast->set($model, 'amount', $money, []);
@@ -30,7 +36,10 @@ it('casts Money object to database value', function (): void {
 
 it('handles null values when getting', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
 
     $money = $cast->get($model, 'amount', null, []);
 
@@ -39,7 +48,10 @@ it('handles null values when getting', function (): void {
 
 it('handles null values when setting', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
 
     $value = $cast->set($model, 'amount', null, []);
 
@@ -48,7 +60,10 @@ it('handles null values when setting', function (): void {
 
 it('handles zero amounts', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
 
     $money = $cast->get($model, 'amount', '0', []);
 
@@ -59,7 +74,10 @@ it('handles zero amounts', function (): void {
 
 it('handles large amounts', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
 
     $money = $cast->get($model, 'amount', '999999999', []);
 
@@ -69,10 +87,24 @@ it('handles large amounts', function (): void {
 
 it('converts integer to string when setting', function (): void {
     $cast = new MoneyCast();
-    $model = new class extends Model {};
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
     $money = new Money(10000, new Currency('JMD'));
 
     $value = $cast->set($model, 'amount', $money, []);
 
     expect($value)->toBe('10000');
+});
+
+it('throws exception when setting non-Money value', function (): void {
+    $cast = new MoneyCast();
+    $model = new class extends Model
+    {
+        use Illuminate\Database\Eloquent\Factories\HasFactory;
+    };
+
+    expect(fn (): ?string => $cast->set($model, 'amount', 'invalid', []))
+        ->toThrow(InvalidArgumentException::class, 'Value must be an instance of Money');
 });

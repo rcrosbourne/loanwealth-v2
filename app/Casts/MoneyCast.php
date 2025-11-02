@@ -6,11 +6,12 @@ namespace App\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 use Money\Currency;
 use Money\Money;
 
 /**
- * @implements CastsAttributes<Money, Money>
+ * @implements CastsAttributes<Money, mixed>
  */
 final class MoneyCast implements CastsAttributes
 {
@@ -25,7 +26,8 @@ final class MoneyCast implements CastsAttributes
             return null;
         }
 
-        return new Money((string) $value, new Currency('JMD'));
+        /** @var int|numeric-string $value */
+        return new Money($value, new Currency('JMD'));
     }
 
     /**
@@ -39,9 +41,7 @@ final class MoneyCast implements CastsAttributes
             return null;
         }
 
-        if (! $value instanceof Money) {
-            throw new \InvalidArgumentException('Value must be an instance of Money');
-        }
+        throw_unless($value instanceof Money, InvalidArgumentException::class, 'Value must be an instance of Money');
 
         return $value->getAmount();
     }
