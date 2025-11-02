@@ -8,8 +8,8 @@ it('has correct role values', function (): void {
     expect(Role::cases())->toHaveCount(4)
         ->and(Role::Borrower->value)->toBe('borrower')
         ->and(Role::Lender->value)->toBe('lender')
-        ->and(Role::BackOffice->value)->toBe('back_office')
-        ->and(Role::SuperAdmin->value)->toBe('super_admin');
+        ->and(Role::BackOffice->value)->toBe('back-office')
+        ->and(Role::SuperAdmin->value)->toBe('super-admin');
 });
 
 it('can get role label', function (): void {
@@ -24,7 +24,7 @@ it('can get all role values as array', function (): void {
 
     expect($values)->toBeArray()
         ->toHaveCount(4)
-        ->toContain('borrower', 'lender', 'back_office', 'super_admin');
+        ->toContain('borrower', 'lender', 'back-office', 'super-admin');
 });
 
 it('can get all role names as array', function (): void {

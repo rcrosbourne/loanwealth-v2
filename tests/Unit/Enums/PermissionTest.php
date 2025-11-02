@@ -16,14 +16,14 @@ it('has all lender permissions', function (): void {
     expect(Permission::LenderWalletManage->value)->toBe('lender.wallet.manage')
         ->and(Permission::LenderLoansBid->value)->toBe('lender.loans.bid')
         ->and(Permission::LenderPortfolioView->value)->toBe('lender.portfolio.view')
-        ->and(Permission::LenderAutoinvestManage->value)->toBe('lender.autoinvest.manage');
+        ->and(Permission::LenderAutoInvestManage->value)->toBe('lender.auto-invest.manage');
 });
 
 it('has all back office permissions', function (): void {
-    expect(Permission::BackOfficeUsersApprove->value)->toBe('backoffice.users.approve')
-        ->and(Permission::BackOfficeUsersBlock->value)->toBe('backoffice.users.block')
-        ->and(Permission::BackOfficeLoansReview->value)->toBe('backoffice.loans.review')
-        ->and(Permission::BackOfficeReportsView->value)->toBe('backoffice.reports.view');
+    expect(Permission::BackOfficeUsersApprove->value)->toBe('back-office.users.approve')
+        ->and(Permission::BackOfficeUsersBlock->value)->toBe('back-office.users.block')
+        ->and(Permission::BackOfficeLoansReview->value)->toBe('back-office.loans.review')
+        ->and(Permission::BackOfficeReportsView->value)->toBe('back-office.reports.view');
 });
 
 it('has all admin permissions', function (): void {
@@ -50,7 +50,7 @@ it('can get all permission values', function (): void {
 it('can get permission group', function (): void {
     expect(Permission::BorrowerLoansRequest->group())->toBe('borrower')
         ->and(Permission::LenderWalletManage->group())->toBe('lender')
-        ->and(Permission::BackOfficeUsersApprove->group())->toBe('backoffice')
+        ->and(Permission::BackOfficeUsersApprove->group())->toBe('back-office')
         ->and(Permission::AdminUsersDelete->group())->toBe('admin');
 });
 

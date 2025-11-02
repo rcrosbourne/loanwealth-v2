@@ -8,8 +8,8 @@ it('has correct user type values', function (): void {
     expect(UserType::cases())->toHaveCount(4)
         ->and(UserType::Borrower->value)->toBe('borrower')
         ->and(UserType::Lender->value)->toBe('lender')
-        ->and(UserType::BackOffice->value)->toBe('back_office')
-        ->and(UserType::SuperAdmin->value)->toBe('super_admin');
+        ->and(UserType::BackOffice->value)->toBe('back-office')
+        ->and(UserType::SuperAdmin->value)->toBe('super-admin');
 });
 
 it('can get user type label', function (): void {

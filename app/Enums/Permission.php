@@ -16,13 +16,13 @@ enum Permission: string
     case LenderWalletManage = 'lender.wallet.manage';
     case LenderLoansBid = 'lender.loans.bid';
     case LenderPortfolioView = 'lender.portfolio.view';
-    case LenderAutoinvestManage = 'lender.autoinvest.manage';
+    case LenderAutoInvestManage = 'lender.auto-invest.manage';
 
     // Back Office Permissions
-    case BackOfficeUsersApprove = 'backoffice.users.approve';
-    case BackOfficeUsersBlock = 'backoffice.users.block';
-    case BackOfficeLoansReview = 'backoffice.loans.review';
-    case BackOfficeReportsView = 'backoffice.reports.view';
+    case BackOfficeUsersApprove = 'back-office.users.approve';
+    case BackOfficeUsersBlock = 'back-office.users.block';
+    case BackOfficeLoansReview = 'back-office.loans.review';
+    case BackOfficeReportsView = 'back-office.reports.view';
 
     // Admin Permissions
     case AdminUsersDelete = 'admin.users.delete';
@@ -57,7 +57,7 @@ enum Permission: string
                 self::LenderWalletManage->value,
                 self::LenderLoansBid->value,
                 self::LenderPortfolioView->value,
-                self::LenderAutoinvestManage->value,
+                self::LenderAutoInvestManage->value,
             ],
             Role::BackOffice => [
                 self::BackOfficeUsersApprove->value,

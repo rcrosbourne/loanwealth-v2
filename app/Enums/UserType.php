@@ -25,8 +25,8 @@ enum UserType: string
 {
     case Borrower = 'borrower';
     case Lender = 'lender';
-    case BackOffice = 'back_office';
-    case SuperAdmin = 'super_admin';
+    case BackOffice = 'back-office';
+    case SuperAdmin = 'super-admin';
 
     public function label(): string
     {

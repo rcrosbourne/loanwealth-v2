@@ -15,7 +15,7 @@ it('lender has correct permissions', function (): void {
     expect($this->lender->can(PermissionEnum::LenderWalletManage->value))->toBeTrue()
         ->and($this->lender->can(PermissionEnum::LenderLoansBid->value))->toBeTrue()
         ->and($this->lender->can(PermissionEnum::LenderPortfolioView->value))->toBeTrue()
-        ->and($this->lender->can(PermissionEnum::LenderAutoinvestManage->value))->toBeTrue();
+        ->and($this->lender->can(PermissionEnum::LenderAutoInvestManage->value))->toBeTrue();
 });
 
 it('lender cannot access borrower permissions', function (): void {
