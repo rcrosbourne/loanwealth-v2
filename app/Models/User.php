@@ -66,7 +66,7 @@ final class User extends Authenticatable implements MustVerifyEmail
      *
      * @phpstan-ignore property.onlyWritten
      */
-    protected string $guard_name = 'web';
+    private string $guard_name = 'web';
 
     /**
      * @return array<string, string>
