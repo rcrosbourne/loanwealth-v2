@@ -4,6 +4,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
 import { initializeTheme } from './hooks/use-appearance';
 
 configureEcho({
@@ -31,3 +32,15 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+if ('serviceWorker' in navigator) {
+    registerSW({
+        immediate: true,
+        onNeedRefresh() {
+            console.log('New content available, reload to update.');
+        },
+        onOfflineReady() {
+            console.log('App is ready for offline use.');
+        },
+    });
+}
