@@ -31,3 +31,17 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+import { registerSW } from 'virtual:pwa-register';
+
+if ('serviceWorker' in navigator) {
+    registerSW({
+        immediate: true,
+        onNeedRefresh() {
+            // Show a prompt to user to refresh
+        },
+        onOfflineReady() {
+            // Show a ready to work offline to user
+        },
+    });
+}
